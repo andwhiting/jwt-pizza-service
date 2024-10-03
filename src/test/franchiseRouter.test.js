@@ -2,11 +2,12 @@ const request = require("supertest");
 const app = require("../service");
 const { randomName, createAdminUser } = require("./router.js");
 
-
-
-test("create and delete a franchise", async () => {
-    let adminUserToken;
-    let adminUser = await createAdminUser();
+let adminUserToken;
+let franchiseId;
+let adminUser;
+let userId;
+beforeEach(async () => {
+    adminUser = await createAdminUser();
     let adminLoginReq = {
         name: adminUser.name,
         email: adminUser.email,
@@ -16,6 +17,7 @@ test("create and delete a franchise", async () => {
         .put("/api/auth")
         .send(adminLoginReq);
     adminUserToken = loginAdminRes.body.token;
+    userId = loginAdminRes.body.user.id;
 
     //create franchise
     let franchise = {
@@ -27,8 +29,22 @@ test("create and delete a franchise", async () => {
         .set("Authorization", `Bearer ${adminUserToken}`)
         .send(franchise);
     expect(createRes.body.name).toBe(franchise.name);
-    let franchiseId = createRes.body.id;
+    franchiseId = createRes.body.id;
+});
 
+test("create a second franchise", async () => {
+    let franchise = {
+        name: adminUser.name + " Pizza Store 2",
+        admins: [{ email: adminUser.email }],
+    };
+    let createRes = await request(app)
+        .post("/api/franchise")
+        .set("Authorization", `Bearer ${adminUserToken}`)
+        .send(franchise);
+    expect(createRes.body.name).toBe(franchise.name);
+});
+
+test("delete a franchise", async () => {
     //delete franchise
 
     let deleteRes = await request(app)
@@ -44,29 +60,6 @@ test("create and delete a franchise", async () => {
 
 //create and delete a franchise store
 test("create and delete a franchise store", async () => {
-    let adminUserToken;
-    let adminUser = await createAdminUser();
-    let adminLoginReq = {
-        name: adminUser.name,
-        email: adminUser.email,
-        password: "toomanysecrets",
-    };
-    const loginAdminRes = await request(app)
-        .put("/api/auth")
-        .send(adminLoginReq);
-    adminUserToken = loginAdminRes.body.token;
-
-    //create franchise
-    let franchise = {
-        name: adminUser.name + " Pizza",
-        admins: [{ email: adminUser.email }],
-    };
-    let createRes = await request(app)
-        .post("/api/franchise")
-        .set("Authorization", `Bearer ${adminUserToken}`)
-        .send(franchise);
-    let franchiseId = createRes.body.id;
-
     //create franchise store
     let store = { franchiseId: franchiseId, name: adminUser.name + "Store" };
     let storeRes = await request(app)
@@ -88,6 +81,21 @@ test("create and delete a franchise store", async () => {
 });
 
 //list all franchises
-
+test("get all franchises", async () => {
+    let getAllRes = await request(app).get("/api/franchise");
+    let franchise = {
+        name: adminUser.name + " Pizza Store",
+        stores: [],
+        id: franchiseId,
+    };
+    expect(getAllRes.body).toContainEqual(franchise);
+});
 
 //list a user's franchises
+// test("get all user's franchises", async () => {
+//     console.log(userId);
+//     let userFranRes = await request(app)
+//         .get(`/api/franchises/${userId}`)
+//         .set("Authorization", `Bearer ${adminUserToken}`);
+//     expect(userFranRes.body).toBe("hi");
+// });
