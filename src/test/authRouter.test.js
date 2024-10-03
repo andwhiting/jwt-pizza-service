@@ -1,26 +1,13 @@
 const request = require("supertest");
 const app = require("../service");
 const { Role, DB } = require("../database/database.js");
+const {createAdminUser, randomName} = require("./router.js");
 
 const testUser = { name: "pizza diner", email: "reg@test.com", password: "a" };
 let testUserAuthToken;
 
 if (process.env.VSCODE_INSPECTOR_OPTIONS) {
     jest.setTimeout(60 * 1000 * 5); // 5 minutes
-}
-
-function randomName() {
-    return Math.random().toString(36).substring(2, 12);
-}
-
-async function createAdminUser() {
-    let user = { password: "toomanysecrets", roles: [{ role: Role.Admin }] };
-    user.name = randomName();
-    user.email = user.name + "@admin.com";
-
-    await DB.addUser(user);
-
-    return user;
 }
 
 beforeAll(async () => {
@@ -89,7 +76,9 @@ test("update user", async () => {
     expect(updateRes.body.email).toMatch(newEmail);
 
     //logout
-    await request(app).delete("/api/auth").set("Authorization", `Bearer ${loginAdmin.body.token}`);
+    await request(app)
+        .delete("/api/auth")
+        .set("Authorization", `Bearer ${loginAdmin.body.token}`);
 
     //Check new password by logging back in
     let reLogRes = await request(app)
