@@ -1,7 +1,6 @@
 const request = require("supertest");
 const app = require("../service");
 const { createAdminUser } = require("./router.js");
-const { DB } = require("../database/database.js");
 
 //.get/menu
 test("get menu", async () => {
