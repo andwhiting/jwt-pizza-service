@@ -1,11 +1,11 @@
 const request = require("supertest");
 const app = require("../service");
-const { randomName, createAdminUser } = require("./router.js");
+const { createAdminUser } = require("./router.js");
 
 let adminUserToken;
 let franchiseId;
 let adminUser;
-let userId;
+//let userId;
 beforeEach(async () => {
     adminUser = await createAdminUser();
     let adminLoginReq = {
@@ -17,7 +17,7 @@ beforeEach(async () => {
         .put("/api/auth")
         .send(adminLoginReq);
     adminUserToken = loginAdminRes.body.token;
-    userId = loginAdminRes.body.user.id;
+    //userId = loginAdminRes.body.user.id;
 
     //create franchise
     let franchise = {
